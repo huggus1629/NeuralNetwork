@@ -127,10 +127,7 @@ class NeuralNetwork:
 			self.parameters[f"W{i}"] -= learning_rate * self.grads[f"dW{i}"]
 			self.parameters[f"b{i}"] -= learning_rate * self.grads[f"db{i}"]
 
-
-
-	def train(self, X, Y, epochs=100, learning_rate=0.01, print_loss=False, step_decay_parameter=1.68):
-		step_decay_learnrate = learning_rate
+	def train(self, X, Y, epochs=100, learning_rate=0.01, print_loss=False):
 		for epoch in range(epochs):
 			# Shuffle der Daten zu Beginn jedes Epochs
 			perm = np.random.permutation(X.shape[1])
@@ -140,14 +137,12 @@ class NeuralNetwork:
 			A = self.forward(X)
 			loss = self.compute_loss(A, Y)
 			self.backward(X, Y)
-			self.update_parameters(step_decay_learnrate)
+			self.update_parameters(learning_rate)
 			if print_loss and epoch % 5 == 0:
 				predictions = np.argmax(A, axis=0)
 				labels = np.argmax(Y, axis=0)
 				acc = np.mean(predictions == labels)
 				print(f"Epoch {epoch}: Loss = {loss:.4f}, Accuracy = {acc:.2%}")
-			if epoch % 10 == 0 and epoch != 0:
-				step_decay_learnrate /= step_decay_parameter
 
 
 
