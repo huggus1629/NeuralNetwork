@@ -14,6 +14,7 @@ def putText(text: str,
             fontsize: int,
             anchor: Anchor,
             screen: Surface,
+            line_spacing: int = 0,
             hl_line: int | None = None,
             color: Color = Color(255, 255, 255),
             hl_color: Color = Color(0, 255, 0)):
@@ -27,7 +28,7 @@ def putText(text: str,
     lines = text.splitlines()
     if hl_line is not None and not (0 <= hl_line < len(lines)):
         raise IndexError(f"Requested line to be highlighted is out of range: {hl_line}.")
-    line_height = font.get_linesize()
+    line_height = font.get_linesize() + line_spacing
 
     x, y = anchor.pos
 

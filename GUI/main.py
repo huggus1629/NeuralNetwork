@@ -108,6 +108,7 @@ try:
                 22,
                 Anchor("tl", (600, v_padding)),
                 screen,
+                line_spacing=2,
                 hl_line=max_index)
 
         # Draw a square between probs_text and help_text
