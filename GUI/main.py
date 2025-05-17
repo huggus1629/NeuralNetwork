@@ -1,5 +1,12 @@
 import pygame as pg
 from grid import SquareGrid
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from neural_network import NeuralNetwork
+from texttowindow import putText, Anchor
+
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
 # Initialize pg
 pg.init()
@@ -15,9 +22,9 @@ pg.display.set_caption("NN Number Recognition")
 clock = pg.time.Clock()
 
 # color macros
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-BG = (44, 44, 44)
+WHITE = pg.Color(255, 255, 255)
+BLACK = pg.Color(0, 0, 0)
+BG = pg.Color(44, 44, 44)
 
 # variables
 grid_wh_px = 560
@@ -29,7 +36,11 @@ v_padding = 20
 grid = SquareGrid(grid_w, h_padding, v_padding, cell_size)
 previous_cells = []
 
-update_nn = False
+nn = NeuralNetwork([784, 64, 32, 10])
+nn.load(f"{ROOT}/network784,64,32,10.npz") # type: ignore
+update_nn = True
+nn_input = [0] * (grid_w * grid_h)
+nn_output: tuple[float, ...] = tuple(1/10 for _ in range(10))
 
 font = pg.font.Font(None, 22)
 
@@ -63,27 +74,32 @@ while running:
                 continue
             grid.last_rmb = now
 
-    # (Add logic here)
-    # convert grid to expected format
-    nn_grid = [float(cell.value) for cell in grid]
     if update_nn:
-        print("update")
+        # convert grid to expected format
+        nn_input = [float(cell.value) for cell in grid]
+        nn_output = tuple(float(p[0]) for p in nn.forward(nn_input)) # type: ignore
     update_nn = False
-    # send nn_grid to neural network
-    # process output (int[10])
 
     # Draw everything
     screen.fill(BG)  # Clear the screen
-    # (Add drawing code here)
 
     # loop through grid
     for cell in grid:
-        if cell.value == 0:
-            pg.draw.rect(screen, WHITE, cell.rect, -1)
-        elif cell.value > 0:  # draw solid if value > 0
-            pg.draw.rect(screen, tuple(int(cell.value * i) for i in WHITE), cell.rect)
+        pg.draw.rect(screen, BG.lerp(WHITE, cell.value), cell.rect)
     
+    # draw bounding box
     pg.draw.rect(screen, WHITE, (h_padding, v_padding, grid_wh_px, grid_wh_px), 1)
+
+    # generate text with all probabilities
+    probs_text = ""
+    for i, p in enumerate(nn_output):
+        probs_text += f"{i}:\t{(100 * p):.3f}%" + ("\n" if i < 9 else "")
+    probs_text = probs_text.expandtabs()
+    # render text
+    putText(probs_text,
+            font,
+            Anchor("tl", (600, v_padding)),
+            screen)
 
     # render help text
     help_text = """\
@@ -91,14 +107,10 @@ Left click + drag do draw
 Right click + drag to erase
 Double right click to clear\
 """
-    lines = help_text.splitlines()
-    line_height = font.get_linesize()
-
-    for i, line in enumerate(lines[::-1]):
-        text_surface = font.render(line, 1, WHITE)
-        text_rect = text_surface.get_rect()
-        text_rect.bottomright = (WIDTH - h_padding, HEIGHT - v_padding - i * line_height)
-        screen.blit(text_surface, text_rect)
+    putText(help_text,
+            font,
+            Anchor("br", (WIDTH - h_padding, HEIGHT - v_padding)),
+            screen)
 
     # Update the display
     pg.display.flip()
