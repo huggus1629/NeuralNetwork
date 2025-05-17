@@ -114,7 +114,7 @@ class SquareGrid:
         c, index = self.getCellFromMousePos(mouse_pos)
         if c is None or index is None:
             return
-        c.value = 1 if not erase else -1
+        c.value = 1 if not erase else 0
         if c in self.previous_cells and not erase:
             return
         if c in self.previous_cells_erased and erase:
