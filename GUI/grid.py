@@ -25,8 +25,8 @@ class SquareGrid:
             for x in range(self.sidelen):
                 rect = Rect(x * self.cell_size + self.x_offset,
                             y * self.cell_size + self.y_offset,
-                            cell_size + 1,
-                            cell_size + 1)
+                            cell_size,
+                            cell_size)
                 self.cells.append(RectValuePair(rect, value))
         self.previous_cells: list[RectValuePair | None] = []
         self.previous_cells_erased: list[RectValuePair | None] = []
