@@ -43,6 +43,8 @@ while running:
 
         # detect mouse dragging
         if event.type == pg.MOUSEMOTION:
+            if not any(event.buttons):
+                continue
             if event.buttons[0]:
                 grid.draw(event.pos)
             elif event.buttons[2]:
@@ -64,6 +66,8 @@ while running:
     # (Add logic here)
     # convert grid to expected format
     nn_grid = [float(cell.value) for cell in grid]
+    if update_nn:
+        print("update")
     update_nn = False
     # send nn_grid to neural network
     # process output (int[10])
