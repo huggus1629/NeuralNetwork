@@ -104,17 +104,17 @@ try:
         max_: int | str = nn_output.index(max(nn_output)) if not grid_empty else ""
         # render text
         max_index = max_ if isinstance(max_, int) else None
-        putText(probs_text,
-                22,
-                Anchor("tl", (600, v_padding)),
-                screen,
-                line_spacing=2,
-                hl_line=max_index)
+        end_of_text = putText(probs_text,
+                              32,
+                              Anchor("tl", (600, v_padding)),
+                              screen,
+                              line_spacing=5,
+                              hl_line=max_index)
 
         # Draw a square between probs_text and help_text
         square_x = 600
         square_size = WIDTH - h_padding - square_x
-        square_y = (HEIGHT - square_size) // 2
+        square_y = end_of_text.bottom + v_padding
         pg.draw.rect(screen, WHITE, (square_x, square_y, square_size, square_size), 1)
         # print the predicted digit in the center of the square
         putText(str(max_),

@@ -1,5 +1,5 @@
 from pygame.font import Font
-from pygame import Color, Surface
+from pygame import Color, Surface, Rect
 
 anchors = {"tl", "tr", "bl", "br", "c"}
 
@@ -17,7 +17,7 @@ def putText(text: str,
             line_spacing: int = 0,
             hl_line: int | None = None,
             color: Color = Color(255, 255, 255),
-            hl_color: Color = Color(0, 255, 0)):
+            hl_color: Color = Color(0, 255, 0)) -> Rect:
     
     # dir = True if going from top to bottom line, False otherwise
     dir = True if anchor.type[0] != "b" else False
@@ -31,6 +31,7 @@ def putText(text: str,
     line_height = font.get_linesize() + line_spacing
 
     x, y = anchor.pos
+    last_rect: Rect = Rect(0, 0, 0, 0)
 
     for i, line in enumerate(lines[::(1 if dir else -1)]):
         text_surface = font.render(line, 1, Color(0, 0, 0) if i == hl_line else color, hl_color if i == hl_line else None)
@@ -47,4 +48,7 @@ def putText(text: str,
         elif anchor.type == "c":
             text_rect.center = new_pos
 
+        last_rect = text_rect
         screen.blit(text_surface, text_rect)
+
+    return last_rect
