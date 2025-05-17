@@ -13,7 +13,7 @@ try:
     pg.init()
 
     # Screen dimensions
-    WIDTH, HEIGHT = 800, 600
+    WIDTH, HEIGHT = 850, 600
 
     # Create the screen
     screen = pg.display.set_mode((WIDTH, HEIGHT))
@@ -33,8 +33,9 @@ try:
     cell_size = grid_wh_px // grid_w
     h_padding = 20
     v_padding = 20
+    grid_origin = (h_padding, (HEIGHT - grid_wh_px) // 2)
 
-    grid = SquareGrid(grid_w, h_padding, v_padding, cell_size)
+    grid = SquareGrid(grid_w, *grid_origin, cell_size)
     previous_cells = []
 
     nn = NeuralNetwork([784, 64, 32, 10])
@@ -93,7 +94,8 @@ try:
             pg.draw.rect(screen, BG.lerp(WHITE, cell.value), cell.rect)
         
         # draw bounding box
-        pg.draw.rect(screen, WHITE, (h_padding, v_padding, grid_wh_px, grid_wh_px), 2)
+        grid_rect = pg.Rect(*grid_origin, grid_wh_px, grid_wh_px)
+        pg.draw.rect(screen, WHITE, grid_rect, 2)
 
         # generate text with all probabilities
         probs_text = ""
@@ -105,14 +107,14 @@ try:
         # render text
         max_index = max_ if isinstance(max_, int) else None
         end_of_text = putText(probs_text,
-                              32,
-                              Anchor("tl", (600, v_padding)),
+                              28,
+                              Anchor("tl", (grid_rect.right + h_padding, v_padding)),
                               screen,
-                              line_spacing=5,
+                              line_spacing=4,
                               hl_line=max_index)
 
         # Draw a square between probs_text and help_text
-        square_x = 600
+        square_x = grid_rect.right + h_padding
         square_size = WIDTH - h_padding - square_x
         square_y = end_of_text.bottom + v_padding
         pg.draw.rect(screen, WHITE, (square_x, square_y, square_size, square_size), 1)
@@ -124,13 +126,13 @@ try:
         
         # render help text
         help_text = """\
-    Left click + drag do draw
-    Right click + drag to erase
-    Double right click to clear\
-    """
+Left click + drag do draw
+Right click + drag to erase
+Double right click to clear\
+"""
         putText(help_text,
                 22,
-                Anchor("br", (WIDTH - h_padding, HEIGHT - v_padding)),
+                Anchor("bl", (grid_rect.right + h_padding, HEIGHT - v_padding)),
                 screen)
 
         # Update the display
