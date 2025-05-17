@@ -1,12 +1,12 @@
 import pygame as pg
 from grid import SquareGrid
 import sys
-import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from os.path import abspath, dirname, join
+ROOT = abspath(join(dirname(__file__), '..'))
+sys.path.append(ROOT)
 from neural_network import NeuralNetwork
 from texttowindow import putText, Anchor
 
-ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
 # Initialize pg
 pg.init()
