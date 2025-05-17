@@ -6,120 +6,140 @@ ROOT = abspath(join(dirname(__file__), '..'))
 sys.path.append(ROOT)
 from neural_network import NeuralNetwork
 from texttowindow import putText, Anchor
+import traceback
 
+try:
+    # Initialize pg
+    pg.init()
 
-# Initialize pg
-pg.init()
+    # Screen dimensions
+    WIDTH, HEIGHT = 800, 600
 
-# Screen dimensions
-WIDTH, HEIGHT = 800, 600
+    # Create the screen
+    screen = pg.display.set_mode((WIDTH, HEIGHT))
+    pg.display.set_caption("NN Number Recognition")
 
-# Create the screen
-screen = pg.display.set_mode((WIDTH, HEIGHT))
-pg.display.set_caption("NN Number Recognition")
+    # Clock for controlling the frame rate
+    clock = pg.time.Clock()
 
-# Clock for controlling the frame rate
-clock = pg.time.Clock()
+    # color macros
+    WHITE = pg.Color(255, 255, 255)
+    BLACK = pg.Color(0, 0, 0)
+    BG = pg.Color(44, 44, 44)
 
-# color macros
-WHITE = pg.Color(255, 255, 255)
-BLACK = pg.Color(0, 0, 0)
-BG = pg.Color(44, 44, 44)
+    # variables
+    grid_wh_px = 560
+    grid_w, grid_h = 28, 28
+    cell_size = grid_wh_px // grid_w
+    h_padding = 20
+    v_padding = 20
 
-# variables
-grid_wh_px = 560
-grid_w, grid_h = 28, 28
-cell_size = grid_wh_px // grid_w
-h_padding = 20
-v_padding = 20
+    grid = SquareGrid(grid_w, h_padding, v_padding, cell_size)
+    previous_cells = []
 
-grid = SquareGrid(grid_w, h_padding, v_padding, cell_size)
-previous_cells = []
+    nn = NeuralNetwork([784, 64, 32, 10])
+    nn.load(f"{ROOT}/Neural_Network.npz") # type: ignore
+    update_nn = True
+    nn_input = [0] * (grid_w * grid_h)
+    nn_output: tuple[float | str, ...] = tuple(1/10 for _ in range(10))
 
-nn = NeuralNetwork([784, 64, 32, 10])
-nn.load(f"{ROOT}/Neural_Network.npz") # type: ignore
-update_nn = True
-nn_input = [0] * (grid_w * grid_h)
-nn_output: tuple[float, ...] = tuple(1/10 for _ in range(10))
+    # Main loop
+    running = True
+    while running:
+        # Handle events
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                running = False
 
-font = pg.font.Font(None, 22)
-
-# Main loop
-running = True
-while running:
-    # Handle events
-    for event in pg.event.get():
-        if event.type == pg.QUIT:
-            running = False
-
-        # detect mouse dragging
-        if event.type == pg.MOUSEMOTION:
-            if not any(event.buttons):
-                continue
-            if event.buttons[0]:
-                grid.draw(event.pos)
-            elif event.buttons[2]:
-                grid.draw(event.pos, erase=True)
-            update_nn = True
-
-        # detect double right click (clear grid)
-        if event.type == pg.MOUSEBUTTONDOWN and event.button == 3:
-            if not grid.last_rmb:
-                grid.last_rmb = pg.time.get_ticks()
-                continue
-            now = pg.time.get_ticks()
-            if now - grid.last_rmb < 500:
-                grid.clear()
+            # detect mouse dragging
+            if event.type == pg.MOUSEMOTION:
+                if not any(event.buttons):
+                    continue
+                if event.buttons[0]:
+                    grid.draw(event.pos)
+                elif event.buttons[2]:
+                    grid.draw(event.pos, erase=True)
                 update_nn = True
-                continue
-            grid.last_rmb = now
 
-    if update_nn:
-        # convert grid to expected format
-        nn_input = [float(cell.value) for cell in grid]
-        nn_output = tuple(float(p[0]) for p in nn.forward(nn_input)) # type: ignore
-    update_nn = False
+            # detect double right click (clear grid)
+            if event.type == pg.MOUSEBUTTONDOWN and event.button == 3:
+                if not grid.last_rmb:
+                    grid.last_rmb = pg.time.get_ticks()
+                    continue
+                now = pg.time.get_ticks()
+                if now - grid.last_rmb < 500:
+                    grid.clear()
+                    update_nn = True
+                    continue
+                grid.last_rmb = now
 
-    # Draw everything
-    screen.fill(BG)  # Clear the screen
+        grid_empty = all(cell.value == 0 for cell in grid)
 
-    # loop through grid
-    for cell in grid:
-        pg.draw.rect(screen, BG.lerp(WHITE, cell.value), cell.rect)
-    
-    # draw bounding box
-    pg.draw.rect(screen, WHITE, (h_padding, v_padding, grid_wh_px, grid_wh_px), 1)
+        if update_nn and not grid_empty:
+            # convert grid to expected format
+            nn_input = [float(cell.value) for cell in grid]
+            # run input through nn
+            nn_output = tuple(float(p[0]) for p in nn.forward(nn_input)) # type: ignore
+        update_nn = False
 
-    # generate text with all probabilities
-    probs_text = ""
-    for i, p in enumerate(nn_output):
-        probs_text += f"{i}:\t{(100 * p):.3f}%" + ("\n" if i < 9 else "")
-    probs_text = probs_text.expandtabs()
-    max_index = nn_output.index(max(nn_output))
-    # render text
-    putText(probs_text,
-            font,
-            Anchor("tl", (600, v_padding)),
-            screen,
-            hl_line=max_index)
+        if grid_empty:
+            nn_output = tuple("--" for _ in range(10))
 
-    # render help text
-    help_text = """\
-Left click + drag do draw
-Right click + drag to erase
-Double right click to clear\
-"""
-    putText(help_text,
-            font,
-            Anchor("br", (WIDTH - h_padding, HEIGHT - v_padding)),
-            screen)
+        # Draw everything
+        screen.fill(BG)  # Clear the screen
 
-    # Update the display
-    pg.display.flip()
+        # loop through grid
+        for cell in grid:
+            pg.draw.rect(screen, BG.lerp(WHITE, cell.value), cell.rect)
+        
+        # draw bounding box
+        pg.draw.rect(screen, WHITE, (h_padding, v_padding, grid_wh_px, grid_wh_px), 2)
 
-    # Cap the frame rate
-    clock.tick(60)
+        # generate text with all probabilities
+        probs_text = ""
+        for i, p in enumerate(nn_output):
+            percentage_or_str = f"{100 * p:.3f}" if isinstance(p, float) else p
+            probs_text += f"{i}:\t{percentage_or_str} %" + ("\n" if i < 9 else "")
+        probs_text = probs_text.expandtabs()
+        max_: int | str = nn_output.index(max(nn_output)) if not grid_empty else ""
+        # render text
+        max_index = max_ if isinstance(max_, int) else None
+        putText(probs_text,
+                22,
+                Anchor("tl", (600, v_padding)),
+                screen,
+                hl_line=max_index)
 
-# Quit pg
-pg.quit()
-raise SystemExit
+        # Draw a square between probs_text and help_text
+        square_x = 600
+        square_size = WIDTH - h_padding - square_x
+        square_y = (HEIGHT - square_size) // 2
+        pg.draw.rect(screen, WHITE, (square_x, square_y, square_size, square_size), 1)
+        # print the predicted digit in the center of the square
+        putText(str(max_),
+                int(1.1*square_size),
+                Anchor("c", (square_x + square_size // 2, square_y + square_size // 2)),
+                screen)
+        
+        # render help text
+        help_text = """\
+    Left click + drag do draw
+    Right click + drag to erase
+    Double right click to clear\
+    """
+        putText(help_text,
+                22,
+                Anchor("br", (WIDTH - h_padding, HEIGHT - v_padding)),
+                screen)
+
+        # Update the display
+        pg.display.flip()
+
+        # Cap the frame rate
+        clock.tick(60)
+except Exception:
+    traceback.print_exc()
+finally:
+    # Quit pg
+    pg.quit()
+    raise SystemExit
