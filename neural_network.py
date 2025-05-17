@@ -7,12 +7,21 @@ class NeuralNetwork:
 		self.parameters = self.create_network()
 
 	def create_network(self):
+		self.bias_counter = 0
+		self.weights_counter = 0
+
 		# Weights und Biases generieren und einen zufälligen Wert geben.
 		parameters = {}
 		for i in range(1, len(self.layer_sizes)):
-			parameters[f"W{i}"] = np.random.randn(self.layer_sizes[i], self.layer_sizes[i - 1]) * np.sqrt(
-				2 / self.layer_sizes[i - 1])
+			w_shape = (self.layer_sizes[i], self.layer_sizes[i - 1])
+			b_shape = (self.layer_sizes[i], 1)
+
+			parameters[f"W{i}"] = np.random.randn(self.layer_sizes[i], self.layer_sizes[i - 1]) * np.sqrt(2 / self.layer_sizes[i - 1])
 			parameters[f"b{i}"] = np.zeros((self.layer_sizes[i], 1))
+
+			self.weights_counter += w_shape[0] * w_shape[1]
+			self.bias_counter += b_shape[0]
+
 		return parameters
 
 	def save(self, filename):
@@ -118,7 +127,10 @@ class NeuralNetwork:
 			self.parameters[f"W{i}"] -= learning_rate * self.grads[f"dW{i}"]
 			self.parameters[f"b{i}"] -= learning_rate * self.grads[f"db{i}"]
 
-	def train(self, X, Y, epochs=1000, learning_rate=0.01, print_loss=False):
+
+
+	def train(self, X, Y, epochs=100, learning_rate=0.01, print_loss=False, step_decay_parameter=1.68):
+		step_decay_learnrate = learning_rate
 		for epoch in range(epochs):
 			# Shuffle der Daten zu Beginn jedes Epochs
 			perm = np.random.permutation(X.shape[1])
@@ -128,18 +140,14 @@ class NeuralNetwork:
 			A = self.forward(X)
 			loss = self.compute_loss(A, Y)
 			self.backward(X, Y)
-			self.update_parameters(learning_rate)
+			self.update_parameters(step_decay_learnrate)
 			if print_loss and epoch % 5 == 0:
 				predictions = np.argmax(A, axis=0)
 				labels = np.argmax(Y, axis=0)
 				acc = np.mean(predictions == labels)
 				print(f"Epoch {epoch}: Loss = {loss:.4f}, Accuracy = {acc:.2%}")
+			if epoch % 10 == 0 and epoch != 0:
+				step_decay_learnrate /= step_decay_parameter
 
 
-# Beispiel zum Laden und Anwenden des Netzwerks
-if __name__ == "__main__":
-	network = NeuralNetwork([6, 5, 5, 2])
-	network.save("network")
-	new_network = NeuralNetwork([3, 4])
-	new_network.load("network")
-	print(new_network.forward(np.array([[3], [4], [5], [6], [6], [7]])))
+
