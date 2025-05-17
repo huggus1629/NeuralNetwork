@@ -95,11 +95,13 @@ while running:
     for i, p in enumerate(nn_output):
         probs_text += f"{i}:\t{(100 * p):.3f}%" + ("\n" if i < 9 else "")
     probs_text = probs_text.expandtabs()
+    max_index = nn_output.index(max(nn_output))
     # render text
     putText(probs_text,
             font,
             Anchor("tl", (600, v_padding)),
-            screen)
+            screen,
+            hl_line=max_index)
 
     # render help text
     help_text = """\
