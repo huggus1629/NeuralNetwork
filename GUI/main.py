@@ -31,7 +31,7 @@ previous_cells = []
 
 update_nn = False
 
-font = pg.font.Font(None, 20)
+font = pg.font.Font(None, 22)
 
 # Main loop
 running = True
