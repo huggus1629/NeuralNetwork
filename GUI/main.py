@@ -37,7 +37,7 @@ grid = SquareGrid(grid_w, h_padding, v_padding, cell_size)
 previous_cells = []
 
 nn = NeuralNetwork([784, 64, 32, 10])
-nn.load(f"{ROOT}/network784,64,32,10.npz") # type: ignore
+nn.load(f"{ROOT}/Neural_Network.npz") # type: ignore
 update_nn = True
 nn_input = [0] * (grid_w * grid_h)
 nn_output: tuple[float, ...] = tuple(1/10 for _ in range(10))
