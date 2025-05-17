@@ -1,7 +1,7 @@
 from pygame.font import Font
 from pygame import Color, Surface
 
-anchors = {"tl", "tr", "bl", "br"}
+anchors = {"tl", "tr", "bl", "br", "c"}
 
 class Anchor:
     def __init__(self, type: str, pos: tuple[int, int]):
@@ -11,7 +11,7 @@ class Anchor:
         self.pos = pos
 
 def putText(text: str,
-            font: Font,
+            fontsize: int,
             anchor: Anchor,
             screen: Surface,
             hl_line: int | None = None,
@@ -19,7 +19,9 @@ def putText(text: str,
             hl_color: Color = Color(0, 255, 0)):
     
     # dir = True if going from top to bottom line, False otherwise
-    dir = True if anchor.type[0] == "t" else False
+    dir = True if anchor.type[0] != "b" else False
+
+    font = Font(None, fontsize)
 
     text = text.strip()  # clean text
     lines = text.splitlines()
@@ -41,5 +43,7 @@ def putText(text: str,
             text_rect.bottomleft = new_pos
         elif anchor.type == "br":
             text_rect.bottomright = new_pos
+        elif anchor.type == "c":
+            text_rect.center = new_pos
 
         screen.blit(text_surface, text_rect)
