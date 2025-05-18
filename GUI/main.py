@@ -56,6 +56,8 @@ try:
             if event.type == pg.MOUSEMOTION:
                 if not any(event.buttons):
                     continue
+                if not grid.mouseInGrid(event.pos):
+                    continue
                 if event.buttons[0]:
                     grid.draw(event.pos)
                 elif event.buttons[2]:
