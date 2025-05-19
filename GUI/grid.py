@@ -9,6 +9,14 @@ class RectValuePair:
     def clear(self):
         self.value = 0
 
+    def distance_px(self, other: "RectValuePair") -> float:
+        dx = other.rect.centerx - self.rect.centerx
+        dy = other.rect.centery - self.rect.centery
+        return (dx ** 2 + dy ** 2) ** 0.5
+    
+    def distance(self, other: "RectValuePair") -> float:
+        return self.distance_px(other) / self.rect.width
+
 class SquareGrid:
     def __init__(self, s: int, x_offset: int, y_offset: int, cell_size: int, value: int = 0):
         self.sidelen = int(s)
@@ -120,18 +128,18 @@ class SquareGrid:
         if c in self.previous_cells_erased and erase:
             return
 
-        surrounding = self.getSurroundingCells(index)  # only depth 1 works!
+        surrounding = self.getSurroundingCells(index, 2)
         
         if not erase:
-            self.previous_cells = surrounding
             self.previous_cells.append(c)
         else:
-            self.previous_cells_erased = surrounding
             self.previous_cells_erased.append(c)
 
         for i, sc in enumerate(surrounding):
             if sc is None:
                 continue
-            change = 0.5 if i % 2 else 0.25
+            falloff = 1.5
+            change = -(1 / falloff) * sc.distance(c) + 1
+            change = max(0, min(change, 1))
             sc.value += change if not erase else -change
             sc.value = max(0, min(sc.value, 1))  # clamp to 0-1
