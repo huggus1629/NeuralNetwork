@@ -18,7 +18,13 @@ class RectValuePair:
         return self.distance_px(other) / self.rect.width
 
 class SquareGrid:
-    def __init__(self, s: int, x_offset: int, y_offset: int, cell_size: int, value: int = 0):
+    def __init__(self,
+                 s: int,
+                 x_offset: int,
+                 y_offset: int,
+                 cell_size: int,
+                 value: int = 0):
+        
         self.sidelen = int(s)
 
         if self.sidelen <= 0:
