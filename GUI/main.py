@@ -58,9 +58,9 @@ try:
                     continue
                 if not grid.mouseInGrid(event.pos):
                     continue
-                if event.buttons[0]:
+                if event.buttons[0]:  # LMB draws
                     grid.draw(event.pos)
-                elif event.buttons[2]:
+                elif event.buttons[2]:  # RMB erases
                     grid.draw(event.pos, erase=True)
                 update_nn = True
 
