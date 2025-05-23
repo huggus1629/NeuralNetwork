@@ -9,11 +9,13 @@ class RectValuePair:
     def clear(self):
         self.value = 0
 
+    # get the distance in pixels
     def distance_px(self, other: "RectValuePair") -> float:
         dx = other.rect.centerx - self.rect.centerx
         dy = other.rect.centery - self.rect.centery
         return (dx ** 2 + dy ** 2) ** 0.5
     
+    # get the distance in "cells"
     def distance(self, other: "RectValuePair") -> float:
         return self.distance_px(other) / self.rect.width
 
@@ -47,6 +49,8 @@ class SquareGrid:
 
         self.last_rmb: bool | int = False
 
+    # getitem, setitem, len and iter allow SquareGrid to be used as an iterable
+    # as opposed to having to write SquareGrid.cells every time
     def __getitem__(self, index: int) -> RectValuePair:
         return self.cells[index]
     
@@ -103,6 +107,7 @@ class SquareGrid:
         
         surrounding: list[RectValuePair | None] = []
 
+        # maybe optimizable but it works
         for d in range(1, depth + 1):
             corners = ((x - d, y - d),
                        (x + d, y - d),
@@ -136,6 +141,9 @@ class SquareGrid:
 
         surrounding = self.getSurroundingCells(index, 2)
         
+        # saving the cell in previous_cells is required
+        # to avoid continuously "redrawing" the cell every
+        # frame, which would cause it to go fully white very quickly
         if not erase:
             self.previous_cells.append(c)
         else:
@@ -144,8 +152,11 @@ class SquareGrid:
         for i, sc in enumerate(surrounding):
             if sc is None:
                 continue
+
+            # determine luminance change based on
+            # distance to central cell
             falloff = 1.5
             change = -(1 / falloff) * sc.distance(c) + 1
-            change = max(0, min(change, 1))
+            change = max(0, min(change, 1))  # clamp to 0-1
             sc.value += change if not erase else -change
             sc.value = max(0, min(sc.value, 1))  # clamp to 0-1

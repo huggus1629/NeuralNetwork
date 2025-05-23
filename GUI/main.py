@@ -9,17 +9,17 @@ from texttowindow import putText, Anchor
 import traceback
 
 try:
-    # Initialize pg
+    # initialize pg
     pg.init()
 
-    # Screen dimensions
+    # screen dimensions
     WIDTH, HEIGHT = 850, 600
 
-    # Create the screen
+    # create the screen
     screen = pg.display.set_mode((WIDTH, HEIGHT))
     pg.display.set_caption("NN Number Recognition")
 
-    # Clock for controlling the frame rate
+    # clock for controlling the frame rate
     clock = pg.time.Clock()
 
     # color macros
@@ -27,7 +27,7 @@ try:
     BLACK = pg.Color(0, 0, 0)
     BG = pg.Color(44, 44, 44)
 
-    # variables
+    # initialize variables
     grid_wh_px = 560
     grid_w, grid_h = 28, 28
     cell_size = grid_wh_px // grid_w
@@ -35,10 +35,10 @@ try:
     v_padding = 20
     grid_origin = (h_padding, (HEIGHT - grid_wh_px) // 2)
 
+    # initialize grid
     grid = SquareGrid(grid_w, *grid_origin, cell_size)
-    previous_cells = []
 
-    nn = NeuralNetwork([784, 64, 32, 10])
+    nn = NeuralNetwork([784, 64, 32, 10]) # [784, 64, 32, 10] will be overridden by load() anyways
     nn.load(f"{ROOT}/Neural_Network.npz") # type: ignore
     update_nn = True
     nn_input = [0] * (grid_w * grid_h)
@@ -70,6 +70,7 @@ try:
                     grid.last_rmb = pg.time.get_ticks()
                     continue
                 now = pg.time.get_ticks()
+                # dt < 500ms equates to double click
                 if now - grid.last_rmb < 500:
                     grid.clear()
                     update_nn = True
@@ -115,7 +116,7 @@ try:
                               line_spacing=4,
                               hl_line=max_index)
 
-        # Draw a square between probs_text and help_text
+        # draw a square between probs_text and help_text
         square_x = grid_rect.right + h_padding
         square_size = WIDTH - h_padding - square_x
         square_y = end_of_text.bottom + v_padding
@@ -137,14 +138,14 @@ Double right click to clear\
                 Anchor("bl", (grid_rect.right + h_padding, HEIGHT - v_padding)),
                 screen)
 
-        # Update the display
+        # swap framebuffers
         pg.display.flip()
 
-        # Cap the frame rate
+        # cap the frame rate
         clock.tick(60)
 except Exception:
     traceback.print_exc()
 finally:
-    # Quit pg
+    # Quit pygame
     pg.quit()
     raise SystemExit
